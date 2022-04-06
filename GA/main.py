@@ -19,7 +19,7 @@ class Solution:
         self.x = []
         for _ in range(n):
             self.x.append(np.random.randint(2, size=precision))
-
+population
     def convert_x(self):
         x = []
         for i in range(n):
@@ -74,7 +74,7 @@ def generate_parents(population: List[Solution]):
         while p1 == p2:
             p2 = np.random.randint(npop)
 
-        parents.append(population[p1]) if population[p1].fitness > population[p2].fitness \
+        parents.append(population[p1]) if population[p1].fitness < population[p2].fitness \
             else parents.append(population[p2])
 
     return parents
@@ -82,8 +82,6 @@ def generate_parents(population: List[Solution]):
 
 def crossover(parents: List[Solution]):
     population = []
-
-    # parents.sort(key=lambda x: x.fitness) # sort parents
 
     pass
 
@@ -95,12 +93,22 @@ if __name__ == "__main__":
     # generations loop
     # for _ in range(ngen):
     #     pass
+    
+    best_current_solution = None
 
     population_fitness(population)
+    
+    # sort popupation
+    
+    # get fitest current solution
 
     parents = generate_parents(population)
 
     # population = crossover(parents)
-
+    
+    # elitism -> add best_solution to new pop
+    
+    # end gen loop
+    
     for i in range(npop):
         print(parents[i])
