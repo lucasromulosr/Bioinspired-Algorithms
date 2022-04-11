@@ -19,11 +19,11 @@ class Solution:
         self.x = []
         for _ in range(n):
             self.x.append(np.random.randint(2, size=precision))
-population
+
     def convert_x(self):
         x = []
         for i in range(n):
-            value = xmin + ((xmax - xmin)/(pow(2, n) - 1)) * int_bin(self.x[i][:])
+            value = xmin + ((xmax - xmin)/(pow(2, precision) - 1)) * int_bin(self.x[i][:])
             x.append(value)
         return x
 
@@ -82,33 +82,56 @@ def generate_parents(population: List[Solution]):
 
 def crossover(parents: List[Solution]):
     population = []
+    cross = int(precision/2)
 
-    pass
+    for p in range(0, npop, 2):
+        solution1 = Solution()
+        solution2 = Solution()
+
+        for i in range(n):
+            solution1.x[i][:cross] = parents[p].x[i][:cross].copy()
+            solution1.x[i][cross:] = parents[p+1].x[i][cross:].copy()
+
+            solution2.x[i][:cross] = parents[p+1].x[i][:cross].copy()
+            solution2.x[i][cross:] = parents[p].x[i][cross:].copy()
+
+        population.append(solution1)
+        population.append(solution2)
+
+    return population
+
+
+def elitism(population: List[Solution], new_population: List[Solution]):
+    p1 = 0
+    p2 = 0
+
+    for i in range(npop):
+
+        if population[i].fitness < population[p1].fitness:
+            p1 = i
+
+        if new_population[i].fitness > new_population[p2].fitness:
+            p2 = i
+
+    new_population[p2] = population[p1]
 
 
 if __name__ == "__main__":
 
     population = generate_initial_population()
 
+    population_fitness(population)
+
     # generations loop
     # for _ in range(ngen):
     #     pass
-    
-    best_current_solution = None
-
-    population_fitness(population)
-    
-    # sort popupation
-    
-    # get fitest current solution
 
     parents = generate_parents(population)
 
-    # population = crossover(parents)
+    new_population = crossover(parents)
+
+    population_fitness(new_population)
     
-    # elitism -> add best_solution to new pop
+    elitism(population, new_population)
     
     # end gen loop
-    
-    for i in range(npop):
-        print(parents[i])
