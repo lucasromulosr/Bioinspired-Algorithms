@@ -1,6 +1,6 @@
 import math
-
 import numpy as np
+from matplotlib import pyplot as plt
 from typing import List
 
 n = 2
@@ -16,9 +16,7 @@ class Solution:
     # generate a new random solution
     def __init__(self):
         self.fitness = None
-        self.x = []
-        for _ in range(n):
-            self.x.append(np.random.randint(2, size=precision))
+        self.x = [np.random.randint(2, size=precision) for _ in range(n)]
 
     def convert_x(self):
         x = []
@@ -54,9 +52,7 @@ def int_bin(x: list):
 
 
 def generate_initial_population():
-    population = []
-    for _ in range(npop):
-        population.append(Solution())
+    population = [Solution() for _ in range(npop)]
     return population
 
 
@@ -82,18 +78,26 @@ def generate_parents(population: List[Solution]):
 
 def crossover(parents: List[Solution]):
     population = []
-    cross = int(precision/2)
+    xi = np.random.randint(n)
+    cross = np.random.randint(precision)
 
     for p in range(0, npop, 2):
         solution1 = Solution()
         solution2 = Solution()
 
-        for i in range(n):
-            solution1.x[i][:cross] = parents[p].x[i][:cross].copy()
-            solution1.x[i][cross:] = parents[p+1].x[i][cross:].copy()
+        for i in range(0, xi-1):
+            solution1.x[i] = parents[p].x[i].copy()
+            solution2.x[i] = parents[p+1].x[i].copy()
 
-            solution2.x[i][:cross] = parents[p+1].x[i][:cross].copy()
-            solution2.x[i][cross:] = parents[p].x[i][cross:].copy()
+        solution1.x[xi][:cross] = parents[p].x[xi][:cross].copy()
+        solution1.x[xi][cross:] = parents[p + 1].x[xi][cross:].copy()
+
+        solution2.x[xi][:cross] = parents[p + 1].x[xi][:cross].copy()
+        solution2.x[xi][cross:] = parents[p].x[xi][cross:].copy()
+
+        for i in range(xi+1, n):
+            solution1.x[i] = parents[p+1].x[i].copy()
+            solution2.x[i] = parents[p].x[i].copy()
 
         population.append(solution1)
         population.append(solution2)
@@ -116,22 +120,47 @@ def elitism(population: List[Solution], new_population: List[Solution]):
     new_population[p2] = population[p1]
 
 
+def get_best_solution(population: List[Solution]):
+    index = 0
+
+    for i in range(npop):
+        if population[i].fitness < population[index].fitness:
+            index = i
+
+    return population[index]
+
+
 if __name__ == "__main__":
 
     population = generate_initial_population()
 
     population_fitness(population)
 
+    best_solutions = [get_best_solution(population)]
+
     # generations loop
-    # for _ in range(ngen):
-    #     pass
+    for _ in range(ngen):
 
-    parents = generate_parents(population)
+        parents = generate_parents(population)
 
-    new_population = crossover(parents)
+        new_population = crossover(parents)
 
-    population_fitness(new_population)
-    
-    elitism(population, new_population)
-    
+        population_fitness(new_population)
+
+        elitism(population, new_population)
+
+        population = new_population.copy()
+
+        best_solutions.append(get_best_solution(population))
     # end gen loop
+
+    for i in range(npop):
+        print(population[i])
+
+    # plot
+    x_ax = np.linspace(0, 10, 11, dtype=int)
+    plt.plot(x_ax, [s.fitness for s in best_solutions])
+    plt.title('best f value by generation')
+    plt.xlabel('gen')
+    plt.ylabel('f')
+    plt.show()
