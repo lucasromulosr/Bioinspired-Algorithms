@@ -29,7 +29,7 @@ class Solution:
         self.fitness = f(self.convert_x())
 
     def __str__(self):
-        string = f'{np.array2string(self.x[0])} {np.array2string(self.x[1])} {str(self.fitness)}'
+        string = f'{[xi.tolist() for xi in self.x]} {str(self.fitness)}'
         return string
 
 
@@ -106,11 +106,11 @@ def crossover(parents: List[Solution]):
 
 
 def elitism(population: List[Solution], new_population: List[Solution]):
+    # replace the less fit child w/ the current best fit
     p1 = 0
     p2 = 0
 
     for i in range(npop):
-
         if population[i].fitness < population[p1].fitness:
             p1 = i
 
@@ -154,8 +154,8 @@ if __name__ == "__main__":
         best_solutions.append(get_best_solution(population))
     # end gen loop
 
-    for i in range(npop):
-        print(population[i])
+    for i in range(ngen+1):
+        print(best_solutions[i])
 
     # plot
     x_ax = np.linspace(0, 10, 11, dtype=int)
