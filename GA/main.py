@@ -3,12 +3,14 @@ import numpy as np
 from matplotlib import pyplot as plt
 from typing import List
 
+
 n = 2
 precision = 6
 npop = 20
 ngen = 10
 xmin = -2
 xmax = 2
+mutt = 0.1
 
 
 class Solution:
@@ -105,6 +107,15 @@ def crossover(parents: List[Solution]):
     return population
 
 
+def mutation(population: List[Solution]):
+    for p in population:
+        for xi in p.x:
+            for i in xi:
+                rand = np.random.rand(1)
+                if rand < mutt:
+                    xi[i] = 0 if xi[i] == 1 else 1
+
+
 def elitism(population: List[Solution], new_population: List[Solution]):
     # replace the less fit child w/ the current best fit
     p1 = 0
@@ -146,6 +157,8 @@ if __name__ == "__main__":
         new_population = crossover(parents)
 
         population_fitness(new_population)
+
+        mutation(population)
 
         elitism(population, new_population)
 
