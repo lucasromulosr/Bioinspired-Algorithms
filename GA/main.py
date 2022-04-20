@@ -63,7 +63,7 @@ def population_fitness(population: List[Solution]):
         s.fitness_function()
 
 
-def generate_parents(population: List[Solution]):
+def tournament_selection(population: List[Solution]):
     parents = []
 
     for _ in range(npop):
@@ -74,6 +74,34 @@ def generate_parents(population: List[Solution]):
 
         parents.append(population[p1]) if population[p1].fitness < population[p2].fitness \
             else parents.append(population[p2])
+
+    return parents
+
+
+def roulette_selection(population: List[Solution]):
+    def get_index(summ):
+        for i in range(npop):
+            summ -= population[i].fitness
+            if summ < 0:
+                return i
+
+    parents = []
+
+    population.sort(key=lambda x: x.fitness)
+    summ = sum(p.fitness for p in population)
+
+    for _ in range(npop):
+        rand1 = np.random.uniform(summ)
+        index1 = get_index(rand1)
+        index2 = index1
+
+        while index1 == index2:
+            rand2 = np.random.uniform(summ)
+            index2 = get_index(rand2)
+
+        # print(summ, rand1, rand2, index1, index2)
+        parents.append(population[index1])
+        parents.append(population[index2])
 
     return parents
 
@@ -152,7 +180,7 @@ if __name__ == "__main__":
     # generations loop
     for _ in range(ngen):
 
-        parents = generate_parents(population)
+        parents = roulette_selection(population)
 
         new_population = crossover(parents)
 
