@@ -90,7 +90,7 @@ def roulette_selection(population: List[Solution]):
     population.sort(key=lambda x: x.fitness)
     summ = sum(p.fitness for p in population)
 
-    for _ in range(npop):
+    for _ in range(0, npop, 2):
         rand1 = np.random.uniform(summ)
         index1 = get_index(rand1)
         index2 = index1
