@@ -3,14 +3,14 @@ import numpy as np
 from matplotlib import pyplot as plt
 from typing import List
 
-
 n = 2
-precision = 6
-npop = 20
-ngen = 10
+npop = 100
+ngen = 100
 xmin = -2
 xmax = 2
 mutt = 0.1
+alpha = 0.75
+beta = 0.25
 
 
 class Solution:
@@ -18,20 +18,13 @@ class Solution:
     # generate a new random solution
     def __init__(self):
         self.fitness = None
-        self.x = [np.random.randint(2, size=precision) for _ in range(n)]
-
-    def convert_x(self):
-        x = []
-        for i in range(n):
-            value = xmin + ((xmax - xmin)/(pow(2, precision) - 1)) * int_bin(self.x[i][:])
-            x.append(value)
-        return x
+        self.x = [np.random.uniform(xmin, xmax) for _ in range(n)]
 
     def fitness_function(self):
-        self.fitness = f(self.convert_x())
+        self.fitness = f(self.x)
 
     def __str__(self):
-        string = f'{[xi.tolist() for xi in self.x]} {str(self.fitness)}'
+        string = f'{self.x} {str(self.fitness)}'
         return string
 
 
@@ -43,14 +36,10 @@ def f(x: list):
         sum1 += pow(x[i], 2)
         sum2 += math.cos(2 * math.pi * x[i])
 
-    fsum1 = -0.2 * math.sqrt(sum1/n)
-    fsum2 = sum2/n
+    fsum1 = -0.2 * math.sqrt(sum1 / n)
+    fsum2 = sum2 / n
 
     return -20 * math.exp(fsum1) - math.exp(fsum2) + 20 + math.e
-
-
-def int_bin(x: list):
-    return int("".join(str(i) for i in x), 2)
 
 
 def generate_initial_population():
@@ -90,7 +79,7 @@ def roulette_selection(population: List[Solution]):
     population.sort(key=lambda x: x.fitness)
     summ = sum(p.fitness for p in population)
 
-    for _ in range(npop):
+    for _ in range(0, npop, 2):
         rand1 = np.random.uniform(summ)
         index1 = get_index(rand1)
         index2 = index1
@@ -99,35 +88,70 @@ def roulette_selection(population: List[Solution]):
             rand2 = np.random.uniform(summ)
             index2 = get_index(rand2)
 
-        # print(summ, rand1, rand2, index1, index2)
+        if index2 < index1:
+            index1, index2 = index2, index1
+
         parents.append(population[index1])
         parents.append(population[index2])
 
     return parents
 
 
-def crossover(parents: List[Solution]):
+def blend_alpha(parents: List[Solution]):
     population = []
-    xi = np.random.randint(n)
-    cross = np.random.randint(precision)
+
+    def check_bounds(value):
+        if xmin <= value <= xmax:
+            return value
+        elif value < xmin:
+            return xmin
+        else:
+            return xmax
 
     for p in range(0, npop, 2):
         solution1 = Solution()
         solution2 = Solution()
 
-        for i in range(0, xi-1):
-            solution1.x[i] = parents[p].x[i].copy()
-            solution2.x[i] = parents[p+1].x[i].copy()
+        for i in range(n):
+            x = parents[p].x[i]
+            y = parents[p + 1].x[i]
+            d = abs(x - y)
 
-        solution1.x[xi][:cross] = parents[p].x[xi][:cross].copy()
-        solution1.x[xi][cross:] = parents[p + 1].x[xi][cross:].copy()
+            u1 = np.random.uniform(min(x, y) - alpha * d, min(x, y) + alpha * d)
+            u1 = check_bounds(u1)
+            u2 = np.random.uniform(min(x, y) - alpha * d, min(x, y) + alpha * d)
+            u2 = check_bounds(u2)
 
-        solution2.x[xi][:cross] = parents[p + 1].x[xi][:cross].copy()
-        solution2.x[xi][cross:] = parents[p].x[xi][cross:].copy()
+            solution1.x[i] = u1
+            solution2.x[i] = u2
 
-        for i in range(xi+1, n):
-            solution1.x[i] = parents[p+1].x[i].copy()
-            solution2.x[i] = parents[p].x[i].copy()
+        population.append(solution1)
+        population.append(solution2)
+
+    return population
+
+
+def blend_alpha_beta(parents: List[Solution]):
+    population = []
+
+    for p in range(0, npop, 2):
+        solution1 = Solution()
+        solution2 = Solution()
+
+        for i in range(n):
+            x = parents[p].x[i]
+            y = parents[p+1].x[i]
+            d = abs(x - y)
+
+            low, high = (x, y) if x < y else (y, x)
+            low -= alpha * d
+            high += beta * d
+
+            low = xmin if low < xmin else low
+            high = xmax if high > xmax else high
+
+            solution1.x[i] = np.random.uniform(low, high)
+            solution2.x[i] = np.random.uniform(low, high)
 
         population.append(solution1)
         population.append(solution2)
@@ -138,10 +162,8 @@ def crossover(parents: List[Solution]):
 def mutation(population: List[Solution]):
     for p in population:
         for xi in p.x:
-            for i in xi:
-                rand = np.random.rand(1)
-                if rand < mutt:
-                    xi[i] = 0 if xi[i] == 1 else 1
+            if np.random.rand(1) < mutt:
+                xi = np.random.uniform(xmin, xmax)
 
 
 def elitism(population: List[Solution], new_population: List[Solution]):
@@ -182,11 +204,11 @@ if __name__ == "__main__":
 
         parents = roulette_selection(population)
 
-        new_population = crossover(parents)
+        new_population = blend_alpha_beta(parents)
 
         population_fitness(new_population)
 
-        mutation(population)
+        mutation(new_population)
 
         elitism(population, new_population)
 
@@ -195,11 +217,11 @@ if __name__ == "__main__":
         best_solutions.append(get_best_solution(population))
     # end gen loop
 
-    for i in range(ngen+1):
+    for i in range(ngen + 1):
         print(best_solutions[i])
 
     # plot
-    x_ax = np.linspace(0, 10, 11, dtype=int)
+    x_ax = np.linspace(0, ngen, ngen + 1, dtype=int)
     plt.plot(x_ax, [s.fitness for s in best_solutions])
     plt.title('best f value by generation')
     plt.xlabel('gen')
