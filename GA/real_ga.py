@@ -97,16 +97,18 @@ def roulette_selection(population: List[Solution]):
     return parents
 
 
+# used in the blends
+def check_bounds(value):
+    if xmin <= value <= xmax:
+        return value
+    elif value < xmin:
+        return xmin
+    else:
+        return xmax
+
+
 def blend_alpha(parents: List[Solution]):
     population = []
-
-    def check_bounds(value):
-        if xmin <= value <= xmax:
-            return value
-        elif value < xmin:
-            return xmin
-        else:
-            return xmax
 
     for p in range(0, npop, 2):
         solution1 = Solution()
@@ -147,11 +149,8 @@ def blend_alpha_beta(parents: List[Solution]):
             low -= alpha * d
             high += beta * d
 
-            low = xmin if low < xmin else low
-            high = xmax if high > xmax else high
-
-            solution1.x[i] = np.random.uniform(low, high)
-            solution2.x[i] = np.random.uniform(low, high)
+            solution1.x[i] = check_bounds(np.random.uniform(low, high))
+            solution2.x[i] = check_bounds(np.random.uniform(low, high))
 
         population.append(solution1)
         population.append(solution2)
