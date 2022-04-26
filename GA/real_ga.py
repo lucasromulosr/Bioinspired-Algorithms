@@ -1,16 +1,19 @@
+import sys
 import math
 import numpy as np
-from matplotlib import pyplot as plt
 from typing import List
 
 n = 2
-npop = 100
-ngen = 100
 xmin = -2
 xmax = 2
-mutt = 0.1
 alpha = 0.75
 beta = 0.25
+mutt = float(sys.argv[1])
+npop = int(sys.argv[2])
+ngen = int(sys.argv[3])
+
+filename = sys.argv[4]
+file = open(filename, 'w')
 
 
 class Solution:
@@ -70,14 +73,14 @@ def tournament_selection(population: List[Solution]):
 def roulette_selection(population: List[Solution]):
     def get_index(summ):
         for i in range(npop):
-            summ -= population[i].fitness
+            summ -= 1/population[i].fitness
             if summ < 0:
                 return i
 
     parents = []
 
     population.sort(key=lambda x: x.fitness)
-    summ = sum(p.fitness for p in population)
+    summ = sum(1/p.fitness for p in population)
 
     for _ in range(0, npop, 2):
         rand1 = np.random.uniform(summ)
@@ -190,16 +193,22 @@ def get_best_solution(population: List[Solution]):
     return population[index]
 
 
+def write_population(population: List[Solution]):
+    for p in population:
+        file.write(f'{p}\n')
+
+
 if __name__ == "__main__":
 
     population = generate_initial_population()
 
     population_fitness(population)
 
-    best_solutions = [get_best_solution(population)]
+    # best_solutions = [get_best_solution(population)]
+    best_solutions = []
 
     # generations loop
-    for _ in range(ngen):
+    for g in range(ngen):
 
         parents = roulette_selection(population)
 
@@ -213,16 +222,16 @@ if __name__ == "__main__":
 
         population = new_population.copy()
 
+        # write population to file
+        file.write(f'POPULATION {g}\n')
+        write_population(population)
+        file.write('\n')
+
         best_solutions.append(get_best_solution(population))
     # end gen loop
 
-    for i in range(ngen + 1):
-        print(best_solutions[i])
+    # write best solutions to file
+    file.write(f'\nBEST SOLUTIONS BY GENERATION\n')
+    write_population(best_solutions)
 
-    # plot
-    x_ax = np.linspace(0, ngen, ngen + 1, dtype=int)
-    plt.plot(x_ax, [s.fitness for s in best_solutions])
-    plt.title('best f value by generation')
-    plt.xlabel('gen')
-    plt.ylabel('f')
-    plt.show()
+    file.close()
