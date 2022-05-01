@@ -1,21 +1,18 @@
+import timeit
 import os
 
 
-def write_details(m, p, g, path):
+def write_details(m, c, p, g, path):
+    os.makedirs(f'{path}', exist_ok=True)
     file = open(f'{path}/details', 'w')
 
     file.write(f'Mutation: {m}\n'
+               f'Crossing: {c}\n'
                f'Pop_Size: {p}\n'
                f'Generations: {g}\n')
 
     file.close()
 
-
-n = 2
-xmin = -2
-xmax = 2
-alpha = 0.75
-beta = 0.25
 
 mutation = [0.01, 0.05, 0.1]
 crossing = [0.6, 0.8, 1]
@@ -24,18 +21,21 @@ generations = [25, 50, 100]
 
 
 if __name__ == '__main__':
+    start_time = timeit.default_timer()
     path_n = 0
     for m in mutation:
-        for p in population_size:
-            for g in generations:
+        for c in crossing:
+            for p in population_size:
+                for g in generations:
 
-                path = f'exec{path_n}'
-                os.mkdir(f'{path}')
-                write_details(m, p, g, path)
+                    path = f'exec{path_n}'
+                    write_details(m, c, p, g, path)
 
-                for i in range(10):
-                    filename = f'{path}/run{i}'
-                    command = f'python3 real_ga.py {m} {p} {g} {filename}'
-                    os.system(command)
+                    for i in range(10):
+                        filename = f'{path}/run'
+                        command = f'python3 real_ga.py {m} {c} {p} {g} {filename}'
+                        os.system(command)
 
-                path_n += 1
+                    path_n += 1
+
+    print(f'Time elapsed: {timeit.default_timer() - start_time} \n')

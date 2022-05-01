@@ -9,10 +9,11 @@ xmax = 2
 alpha = 0.75
 beta = 0.25
 mutt = float(sys.argv[1])
-npop = int(sys.argv[2])
-ngen = int(sys.argv[3])
+cross = float(sys.argv[2])
+npop = int(sys.argv[3])
+ngen = int(sys.argv[4])
 
-filename = sys.argv[4]
+filename = sys.argv[5]
 file = open(filename, 'w')
 
 
@@ -130,8 +131,15 @@ def blend_alpha(parents: List[Solution]):
             solution1.x[i] = u1
             solution2.x[i] = u2
 
-        population.append(solution1)
-        population.append(solution2)
+        if np.random.uniform(100) < cross:
+            population.append(solution1)
+        else:
+            population.append(parents[p])
+
+        if np.random.uniform(100) < cross:
+            population.append(solution2)
+        else:
+            population.append(parents[p + 1])
 
     return population
 
@@ -193,19 +201,13 @@ def get_best_solution(population: List[Solution]):
     return population[index]
 
 
-def write_population(population: List[Solution]):
-    for p in population:
-        file.write(f'{p}\n')
-
-
 if __name__ == "__main__":
 
     population = generate_initial_population()
 
     population_fitness(population)
 
-    # best_solutions = [get_best_solution(population)]
-    best_solutions = []
+    best_solution = None
 
     # generations loop
     for g in range(ngen):
@@ -222,16 +224,15 @@ if __name__ == "__main__":
 
         population = new_population.copy()
 
-        # write population to file
-        file.write(f'POPULATION {g}\n')
-        write_population(population)
-        file.write('\n')
+        best_solution = get_best_solution(population)
 
-        best_solutions.append(get_best_solution(population))
+        # write best solution[0] ant fitness from the population[1:]
+        file.write(f'{best_solution.fitness}\n')
+        for p in population:
+            file.write(f'{p.fitness}\n')
+
     # end gen loop
 
-    # write best solutions to file
-    file.write(f'\nBEST SOLUTIONS BY GENERATION\n')
-    write_population(best_solutions)
-
     file.close()
+
+    print(f'{mutt}, {cross}, {npop}, {ngen} \n')
