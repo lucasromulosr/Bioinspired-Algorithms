@@ -65,7 +65,7 @@ def analyse():
 
                     path_n += 1
 
-    df.to_csv('saida')
+    df.to_csv('output')
 
 
 def main():

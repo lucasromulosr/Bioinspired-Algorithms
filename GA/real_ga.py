@@ -223,10 +223,11 @@ if __name__ == "__main__":
 
         population = new_population.copy()
 
-        best_solution = get_best_solution(population)
-
     # end gen loop
 
+    best_solution = get_best_solution(population)
+
+    # writes the best solution and population mean to the file
     file.write(f'{np.mean([x.fitness for x in population])}\n')
     file.write(f'{best_solution.fitness}\n')
 
