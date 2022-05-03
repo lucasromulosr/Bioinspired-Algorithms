@@ -3,6 +3,7 @@ import math
 import numpy as np
 from typing import List
 
+
 n = 2
 xmin = -2
 xmax = 2
@@ -84,13 +85,11 @@ def roulette_selection(population: List[Solution]):
     summ = sum(1/p.fitness for p in population)
 
     for _ in range(0, npop, 2):
-        rand1 = np.random.uniform(summ)
-        index1 = get_index(rand1)
+        index1 = get_index(np.random.uniform(summ))
         index2 = index1
 
         while index1 == index2:
-            rand2 = np.random.uniform(summ)
-            index2 = get_index(rand2)
+            index2 = get_index(np.random.uniform(summ))
 
         if index2 < index1:
             index1, index2 = index2, index1
@@ -226,13 +225,9 @@ if __name__ == "__main__":
 
         best_solution = get_best_solution(population)
 
-        # write best solution[0] ant fitness from the population[1:]
-        file.write(f'{best_solution.fitness}\n')
-        for p in population:
-            file.write(f'{p.fitness}\n')
-
     # end gen loop
 
-    file.close()
+    file.write(f'{np.mean([x.fitness for x in population])}\n')
+    file.write(f'{best_solution.fitness}\n')
 
-    print(f'{mutt}, {cross}, {npop}, {ngen} \n')
+    file.close()
