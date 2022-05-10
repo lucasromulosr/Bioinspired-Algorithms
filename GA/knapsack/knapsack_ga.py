@@ -1,29 +1,28 @@
 import sys
-import math
+import copy
 import numpy as np
 from typing import List
 
 
-# mutt = float(sys.argv[1])
-# cross = float(sys.argv[2])
-# npop = int(sys.argv[3])
-# ngen = int(sys.argv[4])
-from matplotlib import pyplot as plt
+mutt = float(sys.argv[1])
+cross = float(sys.argv[2])
+npop = int(sys.argv[3])
+ngen = int(sys.argv[4])
 
-mutt = 0.1
-cross = 1
-npop = 10
-ngen = 10
+filename = sys.argv[5]
+file = open(filename, 'w')
 
 read_path = 'datasets/'
+set = sys.argv[6]
 
-file_buffer = open(f'{read_path}p01_c.txt', 'r')
-total_cap = int(file_buffer.readline())
-file_buffer.close()
+with open(f'{read_path}{set}_c.txt', 'r') as file_buffer:
+    total_cap = int(file_buffer.readline())
 
-file_buffer = open(f'{read_path}p01_w.txt', 'r')
-weights = file_buffer.readlines()
-file_buffer.close()
+with open(f'{read_path}{set}_p.txt', 'r') as file_buffer:
+    profits = [int(line.strip()) for line in file_buffer.readlines()]
+
+with open(f'{read_path}{set}_w.txt', 'r') as file_buffer:
+    weights = [int(line.strip()) for line in file_buffer.readlines()]
 
 n = len(weights)
 
@@ -46,12 +45,16 @@ class Solution:
 # OBJECTIVE FUNCTION
 def f(x: list):
     weight = 0
+    fitness = 0
     for i in range(n):
         if x[i] == 1:
-            weight += int(weights[i])
+            weight += weights[i]
+            fitness += profits[i]
 
-    # return weight if weight <= total_cap else 0
-    return weight if weight <= total_cap else -1 * weight
+    if weight > total_cap:
+        fitness = fitness * (1 - (weight - total_cap) / total_cap)
+
+    return fitness
 
 
 def generate_initial_population():
@@ -88,7 +91,7 @@ def roulette_selection(population: List[Solution]):
 
     parents = []
 
-    population.sort(key=lambda x: x.fitness)
+    population.sort(key=lambda x: x.fitness, reverse=True)
     summ = sum(p.fitness for p in population)
 
     for _ in range(0, npop, 2):
@@ -162,7 +165,7 @@ def get_best_solution(population: List[Solution]):
         if population[i].fitness > population[index].fitness:
             index = i
 
-    return population[index]
+    return copy.copy(population[index])
 
 
 if __name__ == "__main__":
@@ -187,20 +190,14 @@ if __name__ == "__main__":
 
         population = new_population.copy()
 
-        for p in population:
-            print(p)
-        print()
-
         best_solutions.append(get_best_solution(population))
     # end gen loop
 
-    for i in range(ngen):
-        print(best_solutions[i])
+    best_solution = get_best_solution(population)
 
-    # plot
-    x_ax = np.linspace(0, ngen, ngen, dtype=int)
-    plt.plot(x_ax, [s.fitness for s in best_solutions])
-    plt.title('best f value by generation')
-    plt.xlabel('gen')
-    plt.ylabel('f')
-    plt.show()
+    # writes the best solution and population mean to the file
+    file.write(f'{best_solution.fitness}\n')
+    for solution in best_solutions:
+        file.write(f'{solution.fitness}\n')
+
+    file.close()

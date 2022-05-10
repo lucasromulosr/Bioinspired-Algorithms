@@ -206,7 +206,7 @@ if __name__ == "__main__":
 
     population_fitness(population)
 
-    best_solution = None
+    best_solutions = []
 
     # generations loop
     for g in range(ngen):
@@ -215,20 +215,22 @@ if __name__ == "__main__":
 
         new_population = blend_alpha_beta(parents)
 
-        population_fitness(new_population)
-
         mutation(new_population)
+
+        population_fitness(new_population)
 
         elitism(population, new_population)
 
         population = new_population.copy()
 
+        best_solutions.append(get_best_solution(population))
     # end gen loop
 
     best_solution = get_best_solution(population)
 
-    # writes the best solution and population mean to the file
-    file.write(f'{np.mean([x.fitness for x in population])}\n')
+    # writes the best solution and the solutions x gen to file
     file.write(f'{best_solution.fitness}\n')
+    for s in best_solutions:
+        file.write(f'{s.fitness}\n')
 
     file.close()

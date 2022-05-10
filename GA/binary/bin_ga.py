@@ -99,7 +99,6 @@ def roulette_selection(population: List[Solution]):
             rand2 = np.random.uniform(summ)
             index2 = get_index(rand2)
 
-        # print(summ, rand1, rand2, index1, index2)
         parents.append(population[index1])
         parents.append(population[index2])
 
