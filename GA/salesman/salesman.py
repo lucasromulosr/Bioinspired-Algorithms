@@ -1,3 +1,4 @@
+import copy
 import random
 import sys
 import numpy as np
@@ -12,10 +13,16 @@ with open(f'{n}_distances') as file:
     distances = [line.strip().split() for line in file]
     distances = np.matrix(distances, dtype=int)
 
-mutt = 0.05
-cross = 1
-npop = 100
-ngen = 100
+# mutt = 0.1
+# cross = 0.6
+# npop = 26
+# ngen = 25
+mutt = float(sys.argv[1])
+cross = float(sys.argv[2])
+npop = int(sys.argv[3])
+ngen = int(sys.argv[4])
+
+file = open(sys.argv[5], 'w')
 
 
 class Solution:
@@ -178,6 +185,7 @@ def get_best_solution(population: List[Solution]):
         if population[i].fitness < population[index].fitness:
             index = i
 
+    # return copy.deepcopy(population[index])
     return population[index]
 
 
@@ -207,10 +215,11 @@ if __name__ == "__main__":
     # end gen loop
 
     best_solution = get_best_solution(population)
-    print(best_solution)
 
     # # writes the best solution and the solutions x gen to file
-    # file.write(f'{best_solution.fitness}\n')
-    # for s in best_solutions:
-    #     file.write(f'{s.fitness}\n')
-    # file.close()
+    file.write(f'{best_solution.fitness}\n')
+    for s in best_solutions:
+        file.write(f'{s.fitness}\n')
+    file.close()
+
+    print(mutt, cross, npop, ngen)
