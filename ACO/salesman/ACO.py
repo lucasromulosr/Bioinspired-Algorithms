@@ -1,9 +1,10 @@
 import numpy as np
 from typing import List
+import pandas as pd
 
 # solucao da 26 eh 937
 n = 26
-max_iter = 100
+max_iter = 50
 stop_condition = max_iter / 10
 
 with open(f'{n}_distances', 'r') as file:
@@ -16,11 +17,13 @@ with open(f'{n}_solution', 'r') as file:
 pheromone = [0 if i == j else pow(10, -16) for i in range(n) for j in range(n)]
 pheromone = np.matrix(np.array_split(pheromone, n))
 
-
 alpha = 1
 beta = 5
 ro = 0.5
 Q = 100
+e = 0.8
+w = int(n/3)
+csi = 0.1
 
 
 class Ant:
@@ -54,8 +57,8 @@ class Ant:
 
 
 def objective_function(x):
-	summ = distances[x[n-1], x[0]]
-	summ += sum([distances[x[i], x[i+1]] for i in range(n-1)])
+	summ = distances[x[n - 1], x[0]]
+	summ += sum([distances[x[i], x[i + 1]] for i in range(n - 1)])
 	return summ
 
 
@@ -70,7 +73,7 @@ def population_fitness(ants: List[Ant]):
 
 def ants_move(ants: List[Ant]):
 	for ant in ants:
-		for _ in range(n-1):
+		for _ in range(n - 1):
 
 			cities = [i for i in range(n) if i not in ant.path]
 			probabilities = [np.nan for _ in cities]
@@ -95,6 +98,9 @@ def ant_deposit_pheromone(ant: Ant, add_factor: float):
 
 
 def ant_system_update(ants: List[Ant]):
+	global pheromone
+	pheromone *= (1 - ro)
+
 	for ant in ants:
 		add_factor = Q / ant.fitness
 		ant_deposit_pheromone(ant, add_factor)
@@ -103,16 +109,16 @@ def ant_system_update(ants: List[Ant]):
 def elitism_ant_system_update(ants: List[Ant]):
 	ant_system_update(ants)
 
-	e = 0.8
 	best = np.argmin([ant.fitness for ant in ants])
 	ant = ants[best]
-
 	add_factor = e * Q / ant.fitness
 	ant_deposit_pheromone(ant, add_factor)
 
 
 def rank_based_ant_system_update(ants: List[Ant]):
-	w = 5
+	global pheromone
+	pheromone *= (1 - ro)
+
 	ants.sort(key=lambda x: x.fitness)
 	bests = ants[:w]
 
@@ -122,22 +128,26 @@ def rank_based_ant_system_update(ants: List[Ant]):
 
 
 def ant_colony_system_update(ants: List[Ant]):
-	best = np.argmin([ant.fitness for ant in ants])
-	ant = ants[best]
-
-	add_factor = ro * ant.fitness
-	ant_deposit_pheromone(ant, add_factor)
-
-
-def pheromone_update(ants: List[Ant], update_method):
 	global pheromone
-	pheromone *= (1 - ro)
-	update_method(ants)
+
+	best = np.argmin([ant.fitness for ant in ants])
+	best = ants[best]
+	add_factor = ro * best.fitness
+	ant_deposit_pheromone(best, add_factor)
+
+	for ant in ants:
+		if ant != best:
+			pheromone[ant.path[n - 1], ant.path[0]] *= (1 - csi)
+			pheromone[ant.path[n - 1], ant.path[0]] += csi * pow(10, -16)
+			for i in range(n - 1):
+				pheromone[ant.path[i], ant.path[i + 1]] *= (1 - csi)
+				pheromone[ant.path[i], ant.path[i + 1]] += csi * pow(10, -16)
 
 
 def main():
 	last_ants = None
 	stop = 0
+	best_solutions = []
 
 	pheromone_updates = {
 		1: ant_system_update,
@@ -145,8 +155,8 @@ def main():
 		3: rank_based_ant_system_update,
 		4: ant_colony_system_update,
 	}
-
-	for _ in range(max_iter):
+	c = 0
+	for c in range(max_iter):
 
 		ants = generate_ants()
 
@@ -154,17 +164,72 @@ def main():
 
 		population_fitness(ants)
 
-		update_method = pheromone_updates.get(4)
-		pheromone_update(ants, update_method)
+		method = 3
+		update_method = pheromone_updates.get(method)
+		update_method(ants)
 
-		stop = (0, stop+1)[Ant.compare_populations(ants, last_ants)]
+		stop = (0, stop + 1)[Ant.compare_populations(ants, last_ants)]
 		if stop == stop_condition:
 			break
 		else:
 			last_ants = ants[:]
 
+		best_solutions.append(np.min([ant.fitness for ant in ants]))
+
 		print([ant.fitness for ant in ants], np.min([ant.fitness for ant in ants]))
+	print(f'best solution: {np.min(best_solutions)}')
+
+	# instance = {
+	# 	'alpha': alpha, 'beta': beta, 'ro': '%.1f' % ro, 'Q': Q
+	# }
+	# if e:
+	# 	instance.update({'e': '%.1f' % e})
+	# if w:
+	# 	instance.update({'w': '%.1f' % w})
+	# if csi:
+	# 	instance.update({'csi': '%.1f' % csi})
+	# instance.update({
+	# 	'iter': c, 'best': np.min(best_solutions), 'mean': np.mean(best_solutions)
+	# })
+	# instances.append(instance)
+	# print(instance)
 
 
 if __name__ == '__main__':
 	main()
+
+	# e = w = csi = None
+	#
+	# for method in [1, 2, 3, 4]:
+	# 	instances = []
+	#
+	# 	for alpha in range(0, 10, 1):
+	# 		for beta in range(0, 10, 1):
+	# 			for ro in np.arange(0., 1.01, 0.1):
+	# 				for Q in range(0, 501, 100):
+	#
+	# 					# ant system
+	# 					if method == 1:
+	# 						main()
+	# 					# elitism
+	# 					if method == 2:
+	# 						for e in np.arange(0.5, 2.1, 0.5): main()
+	# 					# rank based
+	# 					if method == 3:
+	# 						for w in range(int(n/4), int(n+1), int(n/4)): main()
+	# 					# ant colony
+	# 					if method == 4:
+	# 						for csi in np.arange(0.0, 1.01, 0.1): main()
+	#
+	# 					e = w = csi = None
+	#
+	# 	df = pd.DataFrame(instances)
+	# 	df.to_csv(f'output_method_{method}')
+	#
+	# solutions = []
+	# for method in [1, 2, 3, 4]:
+	# 	df = pd.read_csv(f'output_method_{method}')
+	# 	solutions.append(np.min(df['best']))
+	# with open('output', 'w') as file:
+	# 	for s in solutions:
+	# 		file.write(str(s))
