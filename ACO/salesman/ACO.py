@@ -3,6 +3,8 @@ from typing import List
 import pandas as pd
 
 # solucao da 26 eh 937
+# solucao da 42 eh 699
+# solucao da 48 eh 33523
 n = 26
 max_iter = 50
 stop_condition = max_iter / 10
@@ -11,8 +13,11 @@ with open(f'{n}_distances', 'r') as file:
 	distances = [line.strip().split() for line in file]
 	distances = np.matrix(distances, dtype=int)
 
-with open(f'{n}_solution', 'r') as file:
-	solution = [int(line.strip()) - 1 for line in file]
+try:
+	with open(f'{n}_solution', 'r') as file:
+		solution = [int(line.strip()) - 1 for line in file]
+except FileNotFoundError:
+	pass
 
 pheromone = [0 if i == j else pow(10, -16) for i in range(n) for j in range(n)]
 pheromone = np.matrix(np.array_split(pheromone, n))
@@ -164,7 +169,6 @@ def main():
 
 		population_fitness(ants)
 
-		method = 3
 		update_method = pheromone_updates.get(method)
 		update_method(ants)
 
@@ -179,57 +183,6 @@ def main():
 		print([ant.fitness for ant in ants], np.min([ant.fitness for ant in ants]))
 	print(f'best solution: {np.min(best_solutions)}')
 
-	# instance = {
-	# 	'alpha': alpha, 'beta': beta, 'ro': '%.1f' % ro, 'Q': Q
-	# }
-	# if e:
-	# 	instance.update({'e': '%.1f' % e})
-	# if w:
-	# 	instance.update({'w': '%.1f' % w})
-	# if csi:
-	# 	instance.update({'csi': '%.1f' % csi})
-	# instance.update({
-	# 	'iter': c, 'best': np.min(best_solutions), 'mean': np.mean(best_solutions)
-	# })
-	# instances.append(instance)
-	# print(instance)
-
 
 if __name__ == '__main__':
 	main()
-
-	# e = w = csi = None
-	#
-	# for method in [1, 2, 3, 4]:
-	# 	instances = []
-	#
-	# 	for alpha in range(0, 10, 1):
-	# 		for beta in range(0, 10, 1):
-	# 			for ro in np.arange(0., 1.01, 0.1):
-	# 				for Q in range(0, 501, 100):
-	#
-	# 					# ant system
-	# 					if method == 1:
-	# 						main()
-	# 					# elitism
-	# 					if method == 2:
-	# 						for e in np.arange(0.5, 2.1, 0.5): main()
-	# 					# rank based
-	# 					if method == 3:
-	# 						for w in range(int(n/4), int(n+1), int(n/4)): main()
-	# 					# ant colony
-	# 					if method == 4:
-	# 						for csi in np.arange(0.0, 1.01, 0.1): main()
-	#
-	# 					e = w = csi = None
-	#
-	# 	df = pd.DataFrame(instances)
-	# 	df.to_csv(f'output_method_{method}')
-	#
-	# solutions = []
-	# for method in [1, 2, 3, 4]:
-	# 	df = pd.read_csv(f'output_method_{method}')
-	# 	solutions.append(np.min(df['best']))
-	# with open('output', 'w') as file:
-	# 	for s in solutions:
-	# 		file.write(str(s))
