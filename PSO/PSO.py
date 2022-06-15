@@ -72,6 +72,16 @@ def focal_topology(particles: List[Particle]):
 		particle.set_familiars([0])
 
 
+def sqrt_topology(particles: List[Particle]):
+	size = int(math.sqrt(m))
+
+	for i in range(size):
+		for j in range(size):
+			familiars = list(range(size*i, size*(i+1), 1))
+			familiars.remove(size*i+j)
+			particles[i*size+j].set_familiars(familiars)
+
+
 def grid_topology(particles: List[Particle]):
 	size = int(math.sqrt(m))
 	for particle in particles:
@@ -90,13 +100,13 @@ def grid_topology(particles: List[Particle]):
 
 
 def main():
-	methods = {
+	topology_method = {
 		1: everyone_knows_topology,
 		2: round_robin_topology,
 		3: focal_topology,
-		4: grid_topology
-	}
-	topology_method = methods.get(4)
+		4: sqrt_topology,
+		5: grid_topology
+	}[4]
 
 	particles = generate_particles()
 
